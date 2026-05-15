@@ -1,0 +1,13 @@
+name = "MPCCModels"
+uuid = "cbaba3ef-cedb-4e5a-9903-71bbac24a74a"
+authors = ["Anton E. Pozharskiy", "Francois Pacaud", "Armin Nurkanovic"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.10.10"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
