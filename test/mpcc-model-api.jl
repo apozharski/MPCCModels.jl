@@ -76,7 +76,7 @@
         n = get_nvar(mpcc)
         m = get_ncon(mpcc)
         ncc = get_ncc(mpcc)
-        @test n == 2
+        @test n == 3
         @test m == 2
         @test ncc == 1
 
