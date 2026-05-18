@@ -18,7 +18,7 @@ include("mpcc/api.jl")
 # types
 export AbstractMPCCModel, MPCCModel, MPCCModelMeta
 # constructors and verticalization
-export MPCCModelVarCon, MPCCConCon, vertical_from
+export MPCCModelVarCon, MPCCConCon, vertical_form
 # API for MPCCs
 export comp_left, comp_left!, comp_right, comp_right!
 export lcomp_left, lcomp_left!, lcomp_right, lcomp_right!

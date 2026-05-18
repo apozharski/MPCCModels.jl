@@ -427,5 +427,5 @@ function vertical_form(mpcc::AbstractMPCCModel)
     ind_vcc2 = get_ind_cc2(mpcc)
     ind_vcc2[ind_lift2] = lift2
 
-    return MPCCModelVarVar(vnlp, ind_vcc1, ind_vcc2)
+    return MPCCModel(vnlp, ind_vcc1, ind_vcc2)
 end

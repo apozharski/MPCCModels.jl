@@ -13,9 +13,13 @@ function NLPModels.objgrad!(mpcc::AbstractMPCCModel, x::AbstractVector, g::Abstr
     return NLPModels.objgrad!(mpcc.nlp, x, g)
 end
 
+function NLPModels.cons(mpcc::AbstractMPCCModel{T,VT}, x::AbstractVector) where {T,VT}
+    c = VT(undef,get_ncon(mpcc))
+    cons!(mpcc, x, c)
+    return c
+end
+
 function NLPModels.cons!(mpcc::AbstractMPCCModel, x::AbstractVector, cx::AbstractVector)
-    # TODO(@anton) do we want to use a SFINAE style definition only for nlpmodel types which do not support
-    #              the linear interface
     cons!(mpcc.nlp, x, mpcc._c1)
     @views cx .= mpcc._c1[get_ind_c(mpcc)]
     return cx
@@ -33,6 +37,12 @@ function NLPModels.cons_nln!(mpcc::AbstractMPCCModel, x::AbstractVector, cx::Abs
     cons_nln!(mpcc.nlp, x, _c_nln)
     @views cx .= _c_lin[get_c_nln(mpcc)]
     return cx
+end
+
+function NLPModels.jac(mpcc::AbstractMPCCModel, x::AbstractVector)
+  I,J = jac_structure(mpcc)
+  V = jac_coord(mpcc, x)
+  return sparse(I,J,V, get_ncon(mpcc), get_nvar(mpcc))
 end
 
 function NLPModels.jac_structure!(
@@ -188,6 +198,33 @@ function NLPModels.jtprod_nln!(
     return Jtv
 end
 
+function NLPModels.hess(
+  mpcc::AbstractMPCCModel{T, VT},
+  x::AbstractVector,
+  y::AbstractVector;
+  obj_weight::Real = one(T),
+) where {T, VT}
+  rows, cols = hess_structure(mpcc)
+  vals = hess_coord(mpcc, x, y, obj_weight = obj_weight)
+  return Symmetric(sparse(rows, cols, vals, get_nvar(mpcc), get_nvar(mpcc)), :L)
+end
+
+function NLPModels.hess(
+    mpcc::AbstractMPCCModel{T},
+    x::AbstractVector;
+    obj_weight::Real = one(T)
+    ) where {T}
+    rows, cols = hess_structure(mpcc)
+    vals = hess_coord(mpcc, x, obj_weight = obj_weight)
+    return Symmetric(sparse(rows, cols, vals, get_nvar(mpcc), get_nvar(mpcc)), :L)
+end
+
+function NLPModels.hess_structure(mpcc::AbstractMPCCModel)
+  rows = Vector{Int}(undef, get_nnzh(mpcc))
+  cols = Vector{Int}(undef, get_nnzh(mpcc))
+  hess_structure!(mpcc, rows, cols)
+end
+
 function NLPModels.hess_structure!(
     mpcc::AbstractMPCCModel,
     rows::AbstractVector{<:Integer},
@@ -197,6 +234,26 @@ function NLPModels.hess_structure!(
     #              which is not correct, but this is hard to mask out so it is fine for now.
     return hess_structure!(mpcc.nlp, rows, cols)
 end
+
+function NLPModels.hess_coord(
+  mpcc::AbstractMPCCModel{T, VT},
+  x::AbstractVector;
+  obj_weight::Real = one(T),
+) where {T, VT}
+  vals = VT(undef, get_nnzh(mpcc))
+  return hess_coord!(mpcc, x, vals; obj_weight = obj_weight)
+end
+
+function NLPModels.hess_coord(
+  mpcc::AbstractMPCCModel{T, VT},
+  x::AbstractVector,
+  y::AbstractVector;
+  obj_weight::Real = one(T),
+) where {T, VT}
+  vals = VT(undef, get_nnzh(mpcc))
+  return hess_coord!(mpcc, x, y, vals; obj_weight = obj_weight)
+end
+
 function NLPModels.hess_coord!(
     mpcc::AbstractMPCCModel{T, VT},
     x::AbstractVector{T},
@@ -208,6 +265,16 @@ function NLPModels.hess_coord!(
     mpcc._c1[get_ind_c(mpcc)] .= y
     return hess_coord!(mpcc.nlp, x, mpcc._c1, H; obj_weight=obj_weight)
 end
+
+function NLPModels.hess_coord!(
+    mpcc::AbstractMPCCModel{T, VT},
+    x::AbstractVector{T},
+    H::AbstractVector;
+    obj_weight::Real=one(T),
+) where {T, VT}
+    return hess_coord!(mpcc.nlp, x, H; obj_weight=obj_weight)
+end
+
 function NLPModels.hprod!(
     mpcc::AbstractMPCCModel{T, VT},
     x::AbstractVector{T},
@@ -385,13 +452,13 @@ end
 function jac_comp_left(mpcc::AbstractMPCCModel{T}, x::AbstractVector{T}) where {T}
     I,J = jac_comp_left_structure(mpcc)
     V = jac_comp_left_coord(mpcc, x)
-    return sparse(I,J,V)
+    return sparse(I,J,V, get_ncc(mpcc), get_nvar(mpcc))
 end
 
 function jac_comp_right(mpcc::AbstractMPCCModel{T}, x::AbstractVector{T}) where {T}
     I,J = jac_comp_right_structure(mpcc)
-    V = jac_comp_right_coord(mpcc)
-    return sparse(I,J,V)
+    V = jac_comp_right_coord(mpcc, x)
+    return sparse(I,J,V, get_ncc(mpcc), get_nvar(mpcc))
 end
 
 function jac_comp_left_structure(mpcc::AbstractMPCCModel)

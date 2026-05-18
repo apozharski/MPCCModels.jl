@@ -8,7 +8,7 @@
         H(x, y) = H(x) + y[2] * T[-0.5 0 0; 0 -2.0 0; 0 0 0]
 
         snlp = SimpleNLPModel(T, M)
-        nlp = CCOpt.LiftedNLPModel(snlp, [2])
+        nlp = MPCCModels.LiftedNLPModel(snlp, [2])
         n = get_nvar(nlp)
         m = get_ncon(nlp)
         @test n == 3
