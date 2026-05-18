@@ -382,6 +382,18 @@ function comp_res_prod!(
     return ccx
 end
 
+function jac_comp_left(mpcc::AbstractMPCCModel{T}, x::AbstractVector{T}) where {T}
+    I,J = jac_comp_left_structure(mpcc)
+    V = jac_comp_left_coord(mpcc, x)
+    return sparse(I,J,V)
+end
+
+function jac_comp_right(mpcc::AbstractMPCCModel{T}, x::AbstractVector{T}) where {T}
+    I,J = jac_comp_right_structure(mpcc)
+    V = jac_comp_right_coord(mpcc)
+    return sparse(I,J,V)
+end
+
 function jac_comp_left_structure(mpcc::AbstractMPCCModel)
     rows = IndexSet(undef, get_comp_left_nnzj(mpcc))
     cols = IndexSet(undef, get_comp_left_nnzj(mpcc))

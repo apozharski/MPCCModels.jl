@@ -1,6 +1,9 @@
 using MPCCModels
+using NLPModels
+using ADNLPModels
 using Test
 
-@testset "MPCCModels.jl" begin
-    # Write your tests here.
-end
+include("simple-model.jl")
+include("simple-mpcc-model.jl")
+include("lifted-nlp-model.jl")
+include("mpcc-model-api.jl")
